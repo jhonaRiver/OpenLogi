@@ -28,6 +28,9 @@ members = [
 # built it alone. Keep that: without this, a virtual workspace defaults to every
 # member, dragging GPUI's Metal shader toolchain into the simplest build there is.
 default-members = ["crates/openlogi"]
+# Patched third-party sources (see [patch.crates-io]); not workspace members, so
+# they keep their upstream lints instead of inheriting ours.
+exclude = ["vendor"]
 
 [workspace.package]
 version = "0.9.0"
@@ -116,6 +119,15 @@ gpui-kit-assets = { git = "https://github.com/longbridge/gpui-kit", tag = "v0.6.
 
 swr-core = "0.1"
 swr-gpui = { package = "swr-gpui-pre", version = "0.1" }
+
+# GPUI's Wayland backend sends wp_viewport.set_destination(0, 0) for layer
+# surfaces that fill their output when a non-1.0 preferred scale arrives before
+# the first configure. That is a fatal protocol error, and it kills the overlay
+# on every scale other than 100% (#1989). vendor/gpui-pre-linux is the published
+# 0.3.4 crate plus a zero-size guard in `set_size_and_scale`. Drop it once
+# gpui-pre-linux ships the guard.
+[patch.crates-io]
+gpui-pre-linux = { path = "vendor/gpui-pre-linux" }
 
 # Backport GroupBox/SettingGroup::footer to v0.6.1 without upgrading GPUI.
 # Remove when adopting an upstream release with the footer API. Keep all Kit
